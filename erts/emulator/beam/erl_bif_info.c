@@ -2551,7 +2551,8 @@ port_info_1(Process* p, Eterm pid)
 	am_id,
 	am_connected,
 	am_input,
-	am_output
+	am_output,
+	am_os_pid
     };
     Eterm items[ASIZE(keys)];
     Eterm result = NIL;
@@ -2608,6 +2609,7 @@ port_info_1(Process* p, Eterm pid)
 **    name        String
 **    input       Number of bytes input from port program
 **    output      Number of bytes output to the port program
+**    os_pid      The child's process ID
 */
 
 BIF_RETTYPE port_info_2(BIF_ALIST_2)
@@ -2704,6 +2706,18 @@ BIF_RETTYPE port_info_2(BIF_ALIST_2)
 	(void) erts_bld_uint(NULL, &hsz, n);
 	hp = HAlloc(BIF_P, hsz);
 	res = erts_bld_uint(&hp, NULL, n);
+    }
+    else if (item == am_os_pid) {
+        if (prt->os_pid >= 0) {
+            Uint hsz = 3;
+            Uint n = prt->os_pid;
+            (void) erts_bld_uint(NULL, &hsz, n);
+            hp = HAlloc(BIF_P, hsz);
+            res = erts_bld_uint(&hp, NULL, n);
+        } else {
+	    hp = HAlloc(BIF_P, 3);
+	    res = am_undefined;
+        }
     }
     else if (item == am_registered_name) {
 	RegProc *reg;
