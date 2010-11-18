@@ -1446,3 +1446,26 @@ efile_fadvise(Efile_error* errInfo, int fd, Sint64 offset,
     errno = ERROR_SUCCESS;
     return check_error(0, errInfo);
 }
+
+int
+efile_sendfile(Efile_error* errInfo, int in_fd, int out_fd,
+	       off_t *offset, size_t *count)
+{
+    /* TODO: Use SetFilePointerEx to support files larger than 4GB?
+             It would require that off_t is 64bit or another type is used.
+             SetFilePointerEx expects LARGE_INTEGER instead of LONG. */
+    if (SetFilePointer((HANDLE) in_fd, *offset, NULL, FILE_BEGIN)
+	!= INVALID_SET_FILE_POINTER) {
+	if (TransmitFile((SOCKET) out_fd, (HANDLE) in_fd, *count,
+			 0, NULL, NULL, 0)) {
+	    *offset += *count;
+	    return check_error(0, errInfo);
+	} else {
+	    /* TODO: correct error handling? */
+	    return set_error(errInfo);
+	}
+    } else {
+	/* TODO: correct error handling? */
+	return set_error(errInfo);
+    }
+}
